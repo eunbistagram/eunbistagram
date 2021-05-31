@@ -4,6 +4,8 @@ import datetime
 import os.path
 import logging
 import argparse
+import datetime as dt
+import time
 try:
     from instagram_private_api import (
         Client, ClientError, ClientLoginError,
@@ -112,11 +114,48 @@ if __name__ == '__main__':
     print('All ok')
     
     
-    
-uuid = api.generate_uuid(return_hex=False, seed=None);
-eunbi_following = api.user_following('47636361181', uuid)
-print(eunbi_following)
 
-eunbi_feed = api.username_feed('silver_rain.__')
-print(eunbi_feed)
+
+#generate uuid    
+uuid = api.generate_uuid(return_hex=False, seed=None);
+
+#initialize variable for user's following list, iterate and print followings
+eunbi_following = api.user_following('47636361181', uuid).get('users')
+for user in eunbi_following:
+	print(user['username'])
+
+#store the user's feed in a variable	
+eunbi_feed = api.user_feed('47636361181')
+feed_items = eunbi_feed.get('items')
+
+#retreive the user's latest feed item (post)
+latest_post = feed_items[2]
+
+#retreive latest post's timestamp, format it
+timestamp = latest_post['taken_at']
+formatted_time = dt.datetime.fromtimestamp(timestamp)
+print(formatted_time)
+
+
+#list all the metadata tags on the latest post
+tags = list(latest_post.keys())
+
+
+#if the post is a carousel(album)
+if 'carousel_media' in tags:
+	print('It\'s an album!\n')
+	time.sleep(1)
+	#store the carousel object
+	album_media = latest_post['carousel_media']
+	for photo in album_media:
+		print(photo['image_versions2']['candidates'][0]['url'])
+		print('\n')
+
+else:
+	print('Not an album!\n')
+	time.sleep(1)
+	upload = latest_post['image_versions2']['candidates'][0]['url']
+	print(upload)
+
+
 
