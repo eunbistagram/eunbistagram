@@ -4,6 +4,8 @@ import datetime
 import os.path
 import logging
 import argparse
+import urllib
+from pathlib import Path
 import datetime as dt
 import time
 try:
@@ -129,7 +131,7 @@ eunbi_feed = api.user_feed('47636361181')
 feed_items = eunbi_feed.get('items')
 
 #retreive the user's latest feed item (post)
-latest_post = feed_items[2]
+latest_post = feed_items[1]
 
 #retreive latest post's timestamp, format it
 timestamp = latest_post['taken_at']
@@ -145,17 +147,22 @@ tags = list(latest_post.keys())
 if 'carousel_media' in tags:
 	print('It\'s an album!\n')
 	time.sleep(1)
-	#store the carousel object
+	#store the carousel object in a variable, print the largest image size for each photo
 	album_media = latest_post['carousel_media']
-	for photo in album_media:
-		print(photo['image_versions2']['candidates'][0]['url'])
-		print('\n')
+	for i, photo in enumerate(album_media):
+		#store the upload url in a variable, access the url and save the image
+		upload = photo['image_versions2']['candidates'][0]['url']
+		urllib.request.urlretrieve(upload, 'photo-%s.jpg' % i)
 
+
+#else if it's just a photo
 else:
 	print('Not an album!\n')
 	time.sleep(1)
+	#store the upload url in a variable, access the url and save the image
 	upload = latest_post['image_versions2']['candidates'][0]['url']
-	print(upload)
+	urllib.request.urlretrieve(upload, "photo.jpg")
+
 
 
 
