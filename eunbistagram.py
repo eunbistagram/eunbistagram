@@ -8,6 +8,9 @@ import urllib
 from pathlib import Path
 import datetime as dt
 import time
+import sys
+
+#save_settings + login callback script
 try:
     from instagram_private_api import (
         Client, ClientError, ClientLoginError,
@@ -116,53 +119,78 @@ if __name__ == '__main__':
     print('All ok')
     
     
+    
+#eunbistagram.py
+EUNBI_ID = '47636361181'
+UUID = api.generate_uuid(return_hex=False, seed=None);
+
+def getFeed(userID):
+	user_feed = api.user_feed(userID)
+	feed_items = user_feed.get('items')
+	return feed_items
+	
+def findPost(feed, index):
+	post = feed[index]
+	return post
 
 
-#generate uuid    
-uuid = api.generate_uuid(return_hex=False, seed=None);
+
+latest_post = findPost(getFeed(EUNBI_ID), 0)
+	
+def getTimeStamp(post):
+	timestamp = post['taken_at']
+	formatted_time = dt.datetime.fromtimestamp(timestamp)
+	return formatted_time
+	
+
+
+		
+
+def saveMedia(post):
+	media_type = post['media_type']
+	if media_type == 8:
+		album = post['carousel_media']
+		for i, photo in enumerate(album):
+			upload = photo['image_versions2']['candidates'][0]['url']
+			urllib.request.urlretrieve(upload, 'img-%s.jpg' % i)
+	elif media_type == 1:
+		upload = latest_post['image_versions2']['candidates'][0]['url']
+		urllib.request.urlretrieve(upload, 'img.jpg')
+	elif media_type == 2:
+		print('This is a video. Here are the meta tags\n\n')
+		print(post.keys())
+		sys.exit()
+		
+	else:
+		print('Unidentified media type\n')
+		print(post['media_type'])
+		sys.exit()
+
+saveMedia(latest_post)
 
 #initialize variable for user's following list, iterate and print followings
-eunbi_following = api.user_following('47636361181', uuid).get('users')
-for user in eunbi_following:
-	print(user['username'])
+#eunbi_following = api.user_following('47636361181', uuid).get('users')
+#for user in eunbi_following:
+#	print(user['username'])
 
-#store the user's feed in a variable	
-eunbi_feed = api.user_feed('47636361181')
-feed_items = eunbi_feed.get('items')
-
-#retreive the user's latest feed item (post)
-latest_post = feed_items[1]
-
-#retreive latest post's timestamp, format it
-timestamp = latest_post['taken_at']
-formatted_time = dt.datetime.fromtimestamp(timestamp)
-print(formatted_time)
-
-
-#list all the metadata tags on the latest post
-tags = list(latest_post.keys())
-
-
-#if the post is a carousel(album)
-if 'carousel_media' in tags:
-	print('It\'s an album!\n')
-	time.sleep(1)
-	#store the carousel object in a variable, print the largest image size for each photo
-	album_media = latest_post['carousel_media']
-	for i, photo in enumerate(album_media):
+#def saveMedia(
+#if 'carousel_media' in tags:
+#	print('It\'s an album!\n')
+#	time.sleep(1)
+#	#store the carousel object in a variable, print the largest image size for each photo
+#	album_media = latest_post['carousel_media']
+#	for i, photo in enumerate(album_media):
 		#store the upload url in a variable, access the url and save the image
-		upload = photo['image_versions2']['candidates'][0]['url']
-		urllib.request.urlretrieve(upload, 'photo-%s.jpg' % i)
+#		upload = photo['image_versions2']['candidates'][0]['url']
+#		urllib.request.urlretrieve(upload, 'photo-%s.jpg' % i)
 
 
 #else if it's just a photo
-else:
-	print('Not an album!\n')
-	time.sleep(1)
+#else:
+#	print('Not an album!\n')
+#	time.sleep(1)
 	#store the upload url in a variable, access the url and save the image
-	upload = latest_post['image_versions2']['candidates'][0]['url']
-	urllib.request.urlretrieve(upload, "photo.jpg")
-
-
+#	upload = latest_post['image_versions2']['candidates'][0]['url']
+#	urllib.request.urlretrieve(upload, "photo.jpg")
 
 
