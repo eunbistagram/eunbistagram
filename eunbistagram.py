@@ -155,18 +155,18 @@ def saveMedia(post):
 		for i, media in enumerate(album):
 			if media['media_type'] == 1:
 				upload = media['image_versions2']['candidates'][0]['url']
-				urllib.request.urlretrieve(upload, 'album-P%s.jpg' % i)
+				urllib.request.urlretrieve(upload, 'album-%s-P.jpg' % i)
 			else:
 				upload = media['video_versions'][0]['url']
-				urllib.request.urlretrieve(upload, 'video.mp4')		
+				urllib.request.urlretrieve(upload, 'album-%s-V.mp4' % i)		
 	elif media_type == 1:
 	
 		upload = post['image_versions2']['candidates'][0]['url']
 		urllib.request.urlretrieve(upload, 'img.jpg')
 	elif media_type == 2:
 	
-		upload = post['carousel_media'][0]['video_versions'][0]['url']
-		urllib.request.urlretreive(upload, 'video.mp4')
+		upload = post['video_versions'][0]['url']
+		urllib.request.urlretrieve(upload, 'video.mp4')
 		
 	else:
 	
@@ -184,9 +184,9 @@ def getMediaFile():
 	return media_files
 	
 	
-#latest_post = findPost(getFeed('47653240204'), 0)
+latest_post = findPost(getFeed(EUNBI_ID), 0)
 
-#saveMedia(latest_post)
+saveMedia(latest_post)
 
 	
 '''new = True
