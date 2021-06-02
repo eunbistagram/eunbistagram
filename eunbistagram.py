@@ -146,23 +146,30 @@ def getTimeStamp(post):
 	
 
 
-
+# june 2 2021 2:45pm MST added video saving & video in carousel saving
 def saveMedia(post):
 	media_type = post['media_type']
 	if media_type == 8:
+	
 		album = post['carousel_media']
-		for i, photo in enumerate(album):
-			upload = photo['image_versions2']['candidates'][0]['url']
-			urllib.request.urlretrieve(upload, 'album-P%s.jpg' % i)
+		for i, media in enumerate(album):
+			if media['media_type'] == 1:
+				upload = media['image_versions2']['candidates'][0]['url']
+				urllib.request.urlretrieve(upload, 'album-P%s.jpg' % i)
+			else:
+				upload = media['video_versions'][0]['url']
+				urllib.request.urlretrieve(upload, 'video.mp4')		
 	elif media_type == 1:
-		upload = latest_post['image_versions2']['candidates'][0]['url']
+	
+		upload = post['image_versions2']['candidates'][0]['url']
 		urllib.request.urlretrieve(upload, 'img.jpg')
 	elif media_type == 2:
-		print('This is a video. Here are the meta tags\n\n')
-		print(post.keys())
-		sys.exit()
+	
+		upload = post['carousel_media'][0]['video_versions'][0]['url']
+		urllib.request.urlretreive(upload, 'video.mp4')
 		
 	else:
+	
 		print('Unidentified media type\n')
 		print(post['media_type'])
 		sys.exit()
@@ -177,10 +184,13 @@ def getMediaFile():
 	return media_files
 	
 	
-latest_post = findPost(getFeed(EUNBI_ID), 0)		
-new = True
-		
-#trouble with file handling - jun 1 2021 16:12 MST
+#latest_post = findPost(getFeed('47653240204'), 0)
+
+#saveMedia(latest_post)
+
+	
+'''new = True
+
 with open ('timestamps.txt', 'a+') as logfile:
 	timestamp = latest_post['taken_at']
 	logfile.seek(0)
@@ -194,7 +204,7 @@ with open ('timestamps.txt', 'a+') as logfile:
 if new:
 	saveMedia(latest_post)
 else:
-	print('No new update')
+	print('No new update')'''
 
 
 
