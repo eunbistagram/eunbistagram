@@ -146,44 +146,70 @@ def getTimeStamp(post):
 	
 
 
-# june 2 2021 2:45pm MST added video saving & video in carousel saving
-def saveMedia(post):
-	media_type = post['media_type']
+isVideo = False
+isAlbum = False
+isPhoto = False
+containsVideo = False
+
+def identifyMediaType(media):
+	global isAlbum
+	global isPhoto
+	global isVideo
+	media_type = media['media_type']
 	if media_type == 8:
-	
+		isAlbum = True
+		
+	elif media_type == 2:
+		isVideo = True
+	else:
+		isPhoto = True
+		
+
+def saveMedia(post):
+	global containsVideo
+	identifyMediaType(post)
+	if isAlbum:
 		album = post['carousel_media']
 		for i, media in enumerate(album):
-			if media['media_type'] == 1:
+			identifyMediaType(media)
+			if isPhoto:
 				upload = media['image_versions2']['candidates'][0]['url']
 				urllib.request.urlretrieve(upload, 'album-%s-P.jpg' % i)
 			else:
+				containsVideo = True
 				upload = media['video_versions'][0]['url']
-				urllib.request.urlretrieve(upload, 'album-%s-V.mp4' % i)		
-	elif media_type == 1:
-	
+				urllib.request.urlretrieve(upload, 'album-%s-V.mp4' % i)
+	elif isPhoto:
 		upload = post['image_versions2']['candidates'][0]['url']
 		urllib.request.urlretrieve(upload, 'img.jpg')
-	elif media_type == 2:
-	
+		
+	elif isVideo:
 		upload = post['video_versions'][0]['url']
 		urllib.request.urlretrieve(upload, 'video.mp4')
 		
 	else:
-	
 		print('Unidentified media type\n')
 		print(post['media_type'])
+		print(isAlbum, isPhoto, isVideo)
 		sys.exit()
+
 	
 def getMediaFile():
 	media_files = []
 	for f in os.listdir('.'):
-		if os.path.isfile(f) and 'img-' in f:
+		if os.path.isfile(f) and 'album-' in f:
 			media_files.append(f)
 		elif os.path.isfile(f) and 'img' in f:
 			media_files = f
+		elif os.path.isfile(f) and 'video' in f:
+			media_files = f
+		else:
+			print('No media files can be found')
+			sys.exit()
+			
 	return media_files
 	
-	
+
 latest_post = findPost(getFeed(EUNBI_ID), 0)
 
 saveMedia(latest_post)
