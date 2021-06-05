@@ -11,6 +11,7 @@ import time
 import sys
 import pytz
 import os
+import tweepy
 
 #save_settings + login callback script
 try:
@@ -215,25 +216,22 @@ latest_post = findPost(getFeed(EUNBI_ID), 0)
 saveMedia(latest_post)
 
 	
-'''new = True
+new = True
 
 with open ('timestamps.txt', 'a+') as logfile:
 	timestamp = latest_post['taken_at']
 	logfile.seek(0)
-	for line in logfile.readlines():
-		if str(timestamp) in line:
-			new = False
-		else:
-			new = True
-			logfile.write(str(timestamp) + '\n')
+	logs = logfile.read();
+	if str(timestamp) in logs:
+		new = False
+	else:
+		new = True
+		logfile.write(str(timestamp) + '\n')
 
 if new:
 	saveMedia(latest_post)
 else:
-	print('No new update')'''
-
-
-
+	print('No new update')
 	
 
 	
