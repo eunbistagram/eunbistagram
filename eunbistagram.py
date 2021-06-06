@@ -205,8 +205,7 @@ def getMediaFile():
 		elif os.path.isfile(f) and 'video' in f:
 			media_files = f
 		else:
-			print('No media files can be found')
-			sys.exit()
+			continue
 			
 	return media_files
 	
@@ -227,12 +226,47 @@ with open ('timestamps.txt', 'a+') as logfile:
 	else:
 		new = True
 		logfile.write(str(timestamp) + '\n')
-
 if new:
 	saveMedia(latest_post)
+	media_files = getMediaFile()
 else:
 	print('No new update')
+	sys.exit();
 	
 
+consumer_key = os.environ.get('CONSUMER_KEY')
+consumer_secret = os.environ.get('CONSUMER_SECRET')
+access_token = os.environ.get('ACCESS_TOKEN')
+access_token_secret = os.environ.get('ACCESS_TOKEN_SECRET')
+
+auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+auth.set_access_token(access_token, access_token_secret)
+
+api = tweepy.API(auth)
+
+
+media_ids = []
+
+#if containsVideo:
+	#media_ids.append(media_files
+
+for i, media in enumerate(media_files):
+	media_ids.append(api.media_upload(media).media_id_string)
+
+
+if isAlbum and not containsVideo:
+	if len(media_ids) <= 4:
+		api.update_status(media_ids=media_ids, status='test')
+	elif len(media_ids) <= 8:
+		post1 = api.update_status(media_ids=media_ids[0:4], status='test')
+		post2 = api.update_status(media_ids=media_ids[4::], status='test2', in_reply_to_status_id=post1.id)
+	else:
+		print('more than 8 images')
+
+#jun 5 9:10pm MST - added image uploading + tweeting
+#work on formatting tweets next
+
+
+	
 	
 
