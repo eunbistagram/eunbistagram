@@ -12,7 +12,7 @@ import sys
 import pytz
 import os
 import tweepy
-
+import subprocess
 #save_settings + login callback script
 try:
     from instagram_private_api import (
@@ -124,6 +124,14 @@ if __name__ == '__main__':
     
     
 #eunbistagram.py -- feed posts -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+consumer_key = os.environ.get('CONSUMER_KEY')
+consumer_secret = os.environ.get('CONSUMER_SECRET')
+access_token = os.environ.get('ACCESS_TOKEN')
+access_token_secret = os.environ.get('ACCESS_TOKEN_SECRET')
+auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+auth.set_access_token(access_token, access_token_secret)
+twtapi = tweepy.API(auth)
+
 EUNBI_ID = '47636361181'
 UUID = api.generate_uuid(return_hex=False, seed=None);
 
@@ -181,14 +189,20 @@ def saveMedia(post):
 			else:
 				containsVideo = True
 				upload = media['video_versions'][0]['url']
-				urllib.request.urlretrieve(upload, 'posts/album-%s.mp4' % i)
+				filename = 'posts/album-%s.mp4'%i
+				urllib.request.urlretrieve(upload, filename)
+				newfileName = 'posts/album-converted_vid-%s.mp4'%i
+				convertVideo(filename, newfileName)
 	elif isPhoto:
 		upload = post['image_versions2']['candidates'][0]['url']
 		urllib.request.urlretrieve(upload, 'posts/post.jpg')
 		
 	elif isVideo:
 		upload = post['video_versions'][0]['url']
-		urllib.request.urlretrieve(upload, 'posts/post.mp4')
+		filename = 'posts/post.mp4'
+		urllib.request.urlretrieve(upload, filename)
+		newfileName = 'posts/post-converted.mp4'
+		convertVideo(filename, newfileName)
 		
 	else:
 		print('Unidentified media type\n')
@@ -196,106 +210,97 @@ def saveMedia(post):
 		print(isAlbum, isPhoto, isVideo)
 		sys.exit()
 
+def convertVideo(filename, newfilename):
+	convert_cmd = ['ffmpeg', '-i', filename, '-vcodec', 'libx264', newfilename]
+	subprocess.run(convert_cmd)
+	os.remove(filename)
+	
 	
 def getMediaFile():
 	media_files = []
-	for f in os.listdir('posts'):
-		if os.path.isfile(f) and 'album-' in f:
-			media_files.append(f)
-		elif os.path.isfile(f) and '.jpg' in f:
-			media_files = f
-		elif os.path.isfile(f) and '.mp4' in f:
-			media_files = f
-		else:
-			continue
-			
+	for f in os.listdir('posts/'):
+		media_files.append('posts/%s' % f)
 	return media_files
 
 
-def authTwitter(): 
-	consumer_key = os.environ.get('CONSUMER_KEY')
-	consumer_secret = os.environ.get('CONSUMER_SECRET')
-	access_token = os.environ.get('ACCESS_TOKEN')
-	access_token_secret = os.environ.get('ACCESS_TOKEN_SECRET')
 
-	auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
-	auth.set_access_token(access_token, access_token_secret)
-
-	api = tweepy.API(auth)
-
-	return api
-
-def tweetPost(media_files, api):
+def tweetPost(media_files):
 
 	vid_ids = []
 	pic_ids = []
 
 	if containsVideo:
-		pic_ids.append([pic for pic in media_files if '.jpg' in pic])
-		vid_ids.append([vid for vid in media_files if '.mp4' in vid])
+		for item in media_files:
+			if '.jpg' in item:
+				pic_ids.append(twtapi.media_upload(item).media_id)
+			else:
+				vid_ids.append(item)
 		
 		if len(vid_ids) == 0:
 			if len(pic_ids) <= 4:
-				api.update_status(media_ids=pic_ids, status='test')
+				twtapi.update_status(media_ids=pic_ids, status='[%s INSTAGRAM CAROUSEL]'%getTimeStamp(latest_post))
 			elif len(pic_ids) <= 8:
-				post1 = api.update_status(media_ids=pic_ids[0:4], status='test')
-				post2 = api.update_status(media_ids=pic_ids[4::], status='test2', in_reply_to_status_id=post1.id)
+				post1 = twtapi.update_status(media_ids=pic_ids[0:4], status='[%s INSTAGRAM CAROUSEL]'%getTimeStamp(latest_post))
+				post2 = twtapi.update_status(media_ids=pic_ids[4::], status='', in_reply_to_status_id=post1.id)
 			elif len(pic_ids) <= 10:
-				post1 = api.update_status(media_ids=pic_ids[0:4], status='test')
-				post2 = api.update_status(media_ids=pic_ids[4:8], status='test2', in_reply_to_status_id=post1.id)
-				post3 = api.update_status(media_ids=pic_ids[8::], status='test3', in_reply_to_status_id=post2.id)
+				post1 = twtapi.update_status(media_ids=pic_ids[0:4], status='[%s INSTAGRAM CAROUSEL]'%getTimeStamp(latest_post))
+				post2 = twtapi.update_status(media_ids=pic_ids[4:8], status='', in_reply_to_status_id=post1.id)
+				post3 = twtapi.update_status(media_ids=pic_ids[8::], status='', in_reply_to_status_id=post2.id)
 			else:
 				print('Error at tweetPost and containsVideo. More than 10 pics possibly')
 				
 		elif len(pic_ids) == 0:
-			post = api.update_status(media_ids=vid_ids[0], status='test')
+			post = postVideoTweet('[%s INSTAGRAM CAROUSEL]'%getTimeStamp(latest_post), None, vid_ids[0])
 			vid_ids.pop(0)
 			for vid in vid_ids:
-				post= api.update_status(media_ids=vid, in_reply_to_status_id=post.id)
+				post = postVideoTweet('', post.id, vid)
 		
 		else:
 			if len(pic_ids) <= 4:
-				post = api.update_status(media_ids=pic_ids, status='test')
+				post = twtapi.update_status(media_ids=pic_ids, status='[%s INSTAGRAM CAROUSEL]'%getTimeStamp(latest_post))
 				for vid in vid_ids:
-					post = api.update_status(media_ids=vid, in_reply_to_status_id=post.id)
+					post = postVideoTweet('', post.id, vid)
 					
 			elif len(pic_ids) <= 8:
-				post = api.update_status(media_ids=pic_ids[0:4], status='test')
-				post = api.update_status(media_ids=pic_ids[4::], status='test2', in_reply_to_status_id=post.id)
+				post = twtapi.update_status(media_ids=pic_ids[0:4], status='test')
+				post = twtapi.update_status(media_ids=pic_ids[4::], status='test2', in_reply_to_status_id=post.id)
 				for vid in vid_ids:
-					post = api.update_status(media_ids=vid, in_reply_to_status_id=post.id)
+					post = postVideoTweet('', post.id, vid)
 					
 			elif len(pic_ids) <= 10:
-				post = api.update_status(media_ids=pic_ids[0:4], status='test')
-				post = api.update_status(media_ids=pic_ids[4:8], status='test2', in_reply_to_status_id=post.id)
-				post = api.update_status(media_ids=pic_ids[8::], status='test3', in_reply_to_status_id=post.id)
+				post = twtapi.update_status(media_ids=pic_ids[0:4], status='test')
+				post = twtapi.update_status(media_ids=pic_ids[4:8], status='test2', in_reply_to_status_id=post.id)
+				post = twtapi.update_status(media_ids=pic_ids[8::], status='test3', in_reply_to_status_id=post.id)
 				for vid in vid_ids:
-					post = api.update_status(media_ids=vid, in_reply_to_status_id=post.id)
+					post = postVideoTweet('', post.id, vid)
 			else:
 				print('Error at tweetPost and containsVideo. More than 10 pics possibly.')
 			
 
 
 	elif isAlbum and not containsVideo:
-		pic_ids.append([pic for pic in media_files if '.jpg' in pic])
+		for item in media_files:
+			pic_ids.append(twtapi.media_upload(item).media_id)
 		if len(pic_ids) <= 4:
-			api.update_status(media_ids=pic_ids)
+			twtapi.update_status(media_ids=pic_ids)
 		elif len(pic_ids) <= 8:
-			post1 = api.update_status(media_ids=pic_ids[0:4], status='test')
-			post2 = api.update_status(media_ids=pic_ids[4::], status='test2', in_reply_to_status_id=post1.id)
+			post1 = twtapi.update_status(media_ids=pic_ids[0:4], status='[%s INSTAGRAM CAROUSEL]'%getTimeStamp(latest_post))
+			post2 = twtapi.update_status(media_ids=pic_ids[4::], status='', in_reply_to_status_id=post1.id)
 		elif len(pic_ids) <=10:
-			post1 = api.update_status(media_ids=pic_ids[0:4], status='test')
-			post2 = api.update_status(media_ids=pic_ids[4:8], status='test2', in_reply_to_status_id=post1.id)
-			post3 = api.update_status(media_ids=pic_ids[8::], status='test3', in_reply_to_status_id=post2.id)
+			post1 = twtapi.update_status(media_ids=pic_ids[0:4], status='[%s INSTAGRAM CAROUSEL]'%getTimeStamp(latest_post))
+			post2 = twtapi.update_status(media_ids=pic_ids[4:8], status='', in_reply_to_status_id=post1.id)
+			post3 = twtapi.update_status(media_ids=pic_ids[8::], status='', in_reply_to_status_id=post2.id)
 		else:
 			print('Error at tweetPost. isAlbum and not containsVideo. More than 10 images')
 	
 	elif isPhoto:
-		pic_ids.append([pic for pic in media_files if '.jpg' in pic])
-		api.update_status(media_ids=pic_ids[0], status = '[%s INSTAGRAM PHOTO]' % getTimeStamp(latest_post))
+		for item in media_files:
+			pic_ids.append(twtapi.media_upload(item).media_id)
+		twtapi.update_status(media_ids=pic_ids, status= '[%s INSTAGRAM PHOTO]'%getTimeStamp(latest_post))
 	elif isVideo:
-		vid_ids.append([vid for vid in media_files if '.mp4' in pic])
-		api.update_status(media_ids=vid_ids[0], status = '[%s INSTAGRAM VIDEO]' % getTimeStamp(latest_post))
+		for item in media_files:
+			vid_ids.append(item)
+		post = postVideoTweet('[%s INSTAGRAM VIDEO]'%getTimeStamp(latest_post), None, vid_ids[0])
 		
 	else:
 		print('Problem at tweetPost')
@@ -317,7 +322,7 @@ with open ('timestamps.txt', 'a+') as logfile:
 if new:
 	saveMedia(latest_post)
 	media_files = getMediaFile()
-	tweetPost(media_files, authTwitter())
+	tweetPost(media_files)
 else:
 	print('No new update')
 	
@@ -344,7 +349,10 @@ def saveStory(story_items, newposts):
 		if media['taken_at'] in newposts:
 			if media['media_type'] == 2:
 				story = media['video_versions'][0]['url']
+				filename = 'stories/story-%s.mp4'%i
 				urllib.request.urlretrieve(story, 'stories/story-%s.mp4' %i)
+				newfilename = 'stories/converted_story-%s.mp4'%i
+				convertVideo(filename, newfilename)
 			elif media['media_type'] == 1:
 				story = media['image_versions2']['candidates'][0]['url']
 				urllib.request.urlretrieve(story, 'stories/story-%s.jpg' %i)
@@ -357,7 +365,7 @@ def saveStory(story_items, newposts):
 def getStoryFile():
 	story_files = []
 	for f in os.listdir('stories'):
-		story_files.append(f)
+		story_files.append('stories/%s' % f)
 	return story_files
 	
 	
@@ -368,56 +376,67 @@ def identifyStoryType(story_files):
 		if '.mp4' in item:
 			containsVideo = True
 
-def tweetStory(story_files, api):
-	identifyStoryType()
+def tweetStory(story_files):
+	identifyStoryType(story_files)
 	vid_ids = []
 	pic_ids = []
 	if containsVideo:
-		vid_ids.append(api.media_upload([vid for vid in story_files if '.mp4' in vid]))
-		pic_ids.append(api.media_upload([pic for pic in story_files if '.jpg' in vid]))
-	else:
-		pic_ids.append(api.media_upload([pic for pic in story_files if '.jpg' in vid]))
+		for item in story_files:
+			if '.jpg' in item:
+				pic_ids.append(twtapi.media_upload(item).media_id)
+			else:
+				vid_ids.append(item)
 
-	
 	if len(vid_ids) == 0:
 		if len(pic_ids) <= 4:
-			api.update_status(media_ids=pic_ids, status='test')
+			twtapi.update_status(media_ids=pic_ids, status='test')
 		elif len(pic_ids) <= 8:
-			story1 = api.update_status(media_ids=pic_ids[0:4], status='test')
-			story2 = api.update_status(media_ids=pic_ids[4::], status='test2', in_reply_to_status_id=story1.id)
+			story1 = twtapi.update_status(media_ids=pic_ids[0:4], status='test')
+			story2 = twtapi.update_status(media_ids=pic_ids[4::], status='test2', in_reply_to_status_id=story1.id)
 		elif len(pic_ids) <= 10:
-			story1 = api.update_status(media_ids=pic_ids[0:4], status='test')
-			story2 = api.update_status(media_ids=pic_ids[4:8], status='test2', in_reply_to_status_id=story1.id)
-			story3 = api.update_status(media_ids=pic_ids[8::], status='test3', in_reply_to_status_id=story2.id)
+			story1 = twtapi.update_status(media_ids=pic_ids[0:4], status='test')
+			story2 = twtapi.update_status(media_ids=pic_ids[4:8], status='test2', in_reply_to_status_id=story1.id)
+			story3 = twtapi.update_status(media_ids=pic_ids[8::], status='test3', in_reply_to_status_id=story2.id)
 		else:
 			print('Error at tweetStory. More than 10 story images')
 			
 	elif len(pic_ids) == 0:
-		story = api.update_status(media_ids=vid_ids[0], status='test')
+		story = postVideoTweet('[%s INSTAGRAM STORY]'%getTimeStamp(story_items[0]), None, vid_ids[0])
 		vid_ids.pop(0)
 		for vid in vid_ids:
-			story = api.update_status(media_ids=vid, in_reply_to_status_id=story.id)
+			story = postVideoTweet('', story.id, vid)
 	else:
 		if len(pic_ids) <= 4:
-			story = api.update_status(media_ids=pic_ids, status='test')
+			story = twtapi.update_status(media_ids=pic_ids, status='[%s INSTAGRAM STORY]'%getTimeStamp(story_items[0]))
 			for vid in vid_ids:
-				story = api.update_status(media_ids=vid, in_reply_to_status_id=story.id)
+				story = postVideoTweet('', story.id, vid)
 			
 		elif len(pic_ids) <= 8:
-			story = api.update_status(media_ids=pic_ids[0:4], status='test')
-			story = api.update_status(media_ids=pic_ids[4::], status='test2', in_reply_to_status_id=story.id)
+			story = twtapi.update_status(media_ids=pic_ids[0:4], status='test')
+			story = twtapi.update_status(media_ids=pic_ids[4::], status='test2', in_reply_to_status_id=story.id)
 			for vid in vid_ids:
-				story = api.update_status(media_ids=vid, in_reply_to_status_id=story.id)
+				story = twtapi.update_status(media_ids=vid, in_reply_to_status_id=story.id)
 		elif len(pic_ids) <= 10:
-			story = api.update_status(media_ids=pic_ids[0:4], status='test')
-			story = api.update_status(media_ids=pic_ids[4:8], status='test2', in_reply_to_status_id=story.id)
-			story = api.update_status(media_ids=pic_ids[8::], status='test3', in_reply_to_status_id=story.id)
+			story = twtapi.update_status(media_ids=pic_ids[0:4], status='test')
+			story = twtapi.update_status(media_ids=pic_ids[4:8], status='test2', in_reply_to_status_id=story.id)
+			story = twtapi.update_status(media_ids=pic_ids[8::], status='test3', in_reply_to_status_id=story.id)
 			for vid in vid_ids:
-				story = api.update_status(media_ids=vid, in_reply_to_status_id=story.id)
+				story = twtapi.update_status(media_ids=vid, in_reply_to_status_id=story.id)
 		else:
 			print('Error at tweetStory. More than 10 story images with some videos')
 			
-			
+def postVideoTweet(status, reply_id, filename):
+	print(filename)
+	uploaded_media = twtapi.media_upload(filename, media_category='TWEET_VIDEO')
+	while (uploaded_media.processing_info['state'] == 'pending'):
+		time.sleep(uploaded_media.processing_info['check_after_secs'])
+		uploaded_media = twtapi.get_media_upload_status(uploaded_media.media_id)
+	time.sleep(10)
+	print([uploaded_media.media_id])
+	print('\n\n\n')
+	return twtapi.update_status(status=status, in_reply_to_status_id=reply_id, auto_populate_reply_metadata = True, media_ids=[uploaded_media.media_id])
+    
+    			
 			
 with open ('storytimes.txt', 'a+') as storylogs:
 	newposts = []
@@ -436,7 +455,7 @@ if len(newposts) > 0:
 	saveStory(story_items, newposts)
 	story_files = getStoryFile()
 	identifyStoryType(story_files)
-	tweetStory(story_files, authTwitter())
+	tweetStory(story_files)
 else:
 	print('No new story update')
 	sys.exit()
