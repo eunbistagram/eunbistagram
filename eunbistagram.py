@@ -389,7 +389,7 @@ def tweetStory(story_files):
 
 	if len(vid_ids) == 0:
 		if len(pic_ids) <= 4:
-			twtapi.update_status(media_ids=pic_ids, status='test')
+			twtapi.update_status(media_ids=pic_ids, status='[%s INSTAGRAM STORY]'%getTimeStamp(story_items[0]))
 		elif len(pic_ids) <= 8:
 			story1 = twtapi.update_status(media_ids=pic_ids[0:4], status='[%s INSTAGRAM STORY]'%getTimeStamp(story_items[0]))
 			story2 = twtapi.update_status(media_ids=pic_ids[4::], status='', in_reply_to_status_id=story1.id)
