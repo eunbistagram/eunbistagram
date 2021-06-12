@@ -146,7 +146,8 @@ def findPost(feed, index):
 	return post
 		
 
-
+def getCode(post):
+	return post['code']
 
 	
 def getTimeStamp(post):
@@ -281,7 +282,7 @@ def tweetPost(media_files):
 	elif isAlbum and not containsVideo:
 		for item in media_files:
 			pic_ids.append(twtapi.media_upload(item).media_id)
-		'''if len(pic_ids) <= 4:
+		if len(pic_ids) <= 4:
 			twtapi.update_status(media_ids=pic_ids)
 		elif len(pic_ids) <= 8:
 			post1 = twtapi.update_status(media_ids=pic_ids[0:4], status='[%s INSTAGRAM CAROUSEL]'%getTimeStamp(latest_post))
@@ -303,7 +304,7 @@ def tweetPost(media_files):
 		post = postVideoTweet('[%s INSTAGRAM VIDEO]'%getTimeStamp(latest_post), None, vid_ids[0])
 		
 	else:
-		print('Problem at tweetPost')'''
+		print('Problem at tweetPost')
 		
 
 
@@ -321,8 +322,9 @@ with open ('timestamps.txt', 'a+') as logfile:
 		
 if new:
 	saveMedia(latest_post)
-	media_files = getMediaFile()
-	tweetPost(media_files)
+	print('[%s INSTAGRAM CAROUSEL]\n\ninstagram.com/p/%s/'% (getTimeStamp(latest_post), getCode(latest_post))) 
+	#media_files = getMediaFile()
+	#tweetPost(media_files)
 else:
 	print('No new update')
 	
