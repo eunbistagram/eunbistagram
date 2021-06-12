@@ -218,7 +218,7 @@ def convertVideo(filename, newfilename):
 	
 def getMediaFile():
 	media_files = []
-	for f in os.listdir('posts/'):
+	for f in sorted(os.listdir('posts/')):
 		media_files.append('posts/%s' % f)
 	return media_files
 
@@ -281,7 +281,7 @@ def tweetPost(media_files):
 	elif isAlbum and not containsVideo:
 		for item in media_files:
 			pic_ids.append(twtapi.media_upload(item).media_id)
-		if len(pic_ids) <= 4:
+		'''if len(pic_ids) <= 4:
 			twtapi.update_status(media_ids=pic_ids)
 		elif len(pic_ids) <= 8:
 			post1 = twtapi.update_status(media_ids=pic_ids[0:4], status='[%s INSTAGRAM CAROUSEL]'%getTimeStamp(latest_post))
@@ -303,7 +303,7 @@ def tweetPost(media_files):
 		post = postVideoTweet('[%s INSTAGRAM VIDEO]'%getTimeStamp(latest_post), None, vid_ids[0])
 		
 	else:
-		print('Problem at tweetPost')
+		print('Problem at tweetPost')'''
 		
 
 
@@ -364,7 +364,7 @@ def saveStory(story_items, newposts):
 			
 def getStoryFile():
 	story_files = []
-	for f in os.listdir('stories'):
+	for f in sorted(os.listdir('stories')):
 		story_files.append('stories/%s' % f)
 	return story_files
 	
@@ -451,12 +451,12 @@ with open ('storytimes.txt', 'a+') as storylogs:
 
 
 			
-if len(newposts) > 0:
+'''if len(newposts) > 0:
 	saveStory(story_items, newposts)
 	story_files = getStoryFile()
 	identifyStoryType(story_files)
 	tweetStory(story_files)
 else:
 	print('No new story update')
-	sys.exit()
+	sys.exit()'''
 
