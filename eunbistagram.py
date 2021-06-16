@@ -239,37 +239,37 @@ def tweetPost(media_files):
 		
 		if len(vid_ids) == 0:
 			if len(pic_ids) <= 4:
-				twtapi.update_status(media_ids=pic_ids, status='[%s INSTAGRAM CAROUSEL]'%getTimeStamp(latest_post))
+				twtapi.update_status(media_ids=pic_ids, status='[%s INSTAGRAM CAROUSEL]\n\ninstagram.com/p/%s/'% (getTimeStamp(latest_post), getCode(latest_post)))
 			elif len(pic_ids) <= 8:
-				post1 = twtapi.update_status(media_ids=pic_ids[0:4], status='[%s INSTAGRAM CAROUSEL]'%getTimeStamp(latest_post))
+				post1 = twtapi.update_status(media_ids=pic_ids[0:4], status='[%s INSTAGRAM CAROUSEL]\n\ninstagram.com/p/%s/'% (getTimeStamp(latest_post), getCode(latest_post)))
 				post2 = twtapi.update_status(media_ids=pic_ids[4::], status='', in_reply_to_status_id=post1.id)
 			elif len(pic_ids) <= 10:
-				post1 = twtapi.update_status(media_ids=pic_ids[0:4], status='[%s INSTAGRAM CAROUSEL]'%getTimeStamp(latest_post))
+				post1 = twtapi.update_status(media_ids=pic_ids[0:4], status='[%s INSTAGRAM CAROUSEL]\n\ninstagram.com/p/%s/'% (getTimeStamp(latest_post), getCode(latest_post)))
 				post2 = twtapi.update_status(media_ids=pic_ids[4:8], status='', in_reply_to_status_id=post1.id)
 				post3 = twtapi.update_status(media_ids=pic_ids[8::], status='', in_reply_to_status_id=post2.id)
 			else:
 				print('Error at tweetPost and containsVideo. More than 10 pics possibly')
 				
 		elif len(pic_ids) == 0:
-			post = postVideoTweet('[%s INSTAGRAM CAROUSEL]'%getTimeStamp(latest_post), None, vid_ids[0])
+			post = postVideoTweet('[%s INSTAGRAM CAROUSEL]\n\ninstagram.com/p/%s/'% (getTimeStamp(latest_post), getCode(latest_post)), None, vid_ids[0])
 			vid_ids.pop(0)
 			for vid in vid_ids:
 				post = postVideoTweet('', post.id, vid)
 		
 		else:
 			if len(pic_ids) <= 4:
-				post = twtapi.update_status(media_ids=pic_ids, status='[%s INSTAGRAM CAROUSEL]'%getTimeStamp(latest_post))
+				post = twtapi.update_status(media_ids=pic_ids, status='[%s INSTAGRAM CAROUSEL]\n\ninstagram.com/p/%s/'% (getTimeStamp(latest_post), getCode(latest_post)))
 				for vid in vid_ids:
 					post = postVideoTweet('', post.id, vid)
 					
 			elif len(pic_ids) <= 8:
-				post = twtapi.update_status(media_ids=pic_ids[0:4], status='[%s INSTAGRAM CAROUSEL]'%getTimeStamp(latest_post))
+				post = twtapi.update_status(media_ids=pic_ids[0:4], status='[%s INSTAGRAM CAROUSEL]\n\ninstagram.com/p/%s/'% (getTimeStamp(latest_post), getCode(latest_post)))
 				post = twtapi.update_status(media_ids=pic_ids[4::], status='', in_reply_to_status_id=post.id)
 				for vid in vid_ids:
 					post = postVideoTweet('', post.id, vid)
 					
 			elif len(pic_ids) <= 10:
-				post = twtapi.update_status(media_ids=pic_ids[0:4], status='[%s INSTAGRAM CAROUSEL]'%getTimeStamp(latest_post))
+				post = twtapi.update_status(media_ids=pic_ids[0:4], status='[[%s INSTAGRAM CAROUSEL]\n\ninstagram.com/p/%s/'% (getTimeStamp(latest_post), getCode(latest_post)))
 				post = twtapi.update_status(media_ids=pic_ids[4:8], status='', in_reply_to_status_id=post.id)
 				post = twtapi.update_status(media_ids=pic_ids[8::], status='', in_reply_to_status_id=post.id)
 				for vid in vid_ids:
@@ -285,10 +285,10 @@ def tweetPost(media_files):
 		if len(pic_ids) <= 4:
 			twtapi.update_status(media_ids=pic_ids)
 		elif len(pic_ids) <= 8:
-			post1 = twtapi.update_status(media_ids=pic_ids[0:4], status='[%s INSTAGRAM CAROUSEL]'%getTimeStamp(latest_post))
+			post1 = twtapi.update_status(media_ids=pic_ids[0:4], status='[%s INSTAGRAM CAROUSEL]\n\ninstagram.com/p/%s/'% (getTimeStamp(latest_post), getCode(latest_post)))
 			post2 = twtapi.update_status(media_ids=pic_ids[4::], status='', in_reply_to_status_id=post1.id)
 		elif len(pic_ids) <=10:
-			post1 = twtapi.update_status(media_ids=pic_ids[0:4], status='[%s INSTAGRAM CAROUSEL]'%getTimeStamp(latest_post))
+			post1 = twtapi.update_status(media_ids=pic_ids[0:4], status='[%s INSTAGRAM CAROUSEL]\n\ninstagram.com/p/%s/'% (getTimeStamp(latest_post), getCode(latest_post)))
 			post2 = twtapi.update_status(media_ids=pic_ids[4:8], status='', in_reply_to_status_id=post1.id)
 			post3 = twtapi.update_status(media_ids=pic_ids[8::], status='', in_reply_to_status_id=post2.id)
 		else:
@@ -297,12 +297,11 @@ def tweetPost(media_files):
 	elif isPhoto:
 		for item in media_files:
 			pic_ids.append(twtapi.media_upload(item).media_id)
-		twtapi.update_status(media_ids=pic_ids, status= '[%s INSTAGRAM PHOTO]'%getTimeStamp(latest_post))
+		twtapi.update_status(media_ids=pic_ids, status= '[%s INSTAGRAM PHOTO]\n\ninstagram.com/p/%s/'% (getTimeStamp(latest_post), getCode(latest_post)))
 	elif isVideo:
 		for item in media_files:
 			vid_ids.append(item)
-		post = postVideoTweet('[%s INSTAGRAM VIDEO]'%getTimeStamp(latest_post), None, vid_ids[0])
-		
+		post = postVideoTweet('[%s INSTAGRAM VIDEO]\n\ninstagram.com/p/%s/'% (getTimeStamp(latest_post), getCode(latest_post)), None, vid_ids[0])
 	else:
 		print('Problem at tweetPost')
 		
@@ -323,8 +322,8 @@ with open ('timestamps.txt', 'a+') as logfile:
 if new:
 	saveMedia(latest_post)
 	print('[%s INSTAGRAM CAROUSEL]\n\ninstagram.com/p/%s/'% (getTimeStamp(latest_post), getCode(latest_post))) 
-	#media_files = getMediaFile()
-	#tweetPost(media_files)
+	media_files = getMediaFile()
+	tweetPost(media_files)
 else:
 	print('No new update')
 	
