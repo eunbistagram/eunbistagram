@@ -305,6 +305,10 @@ def tweetPost(media_files):
 	else:
 		print('Problem at tweetPost')
 		
+def clearDir(directory):
+	for f in os.listdir(directory):
+		os.remove(os.path.join(directory, f))
+		
 
 
 latest_post = findPost(getFeed(EUNBI_ID), 0)
@@ -324,6 +328,7 @@ if new:
 	print('[%s INSTAGRAM CAROUSEL]\n\ninstagram.com/p/%s/'% (getTimeStamp(latest_post), getCode(latest_post))) 
 	media_files = getMediaFile()
 	tweetPost(media_files)
+	clearDir('posts/')
 else:
 	print('No new update')
 	
@@ -452,12 +457,12 @@ with open ('storytimes.txt', 'a+') as storylogs:
 
 
 			
-'''if len(newposts) > 0:
+if len(newposts) > 0:
 	saveStory(story_items, newposts)
 	story_files = getStoryFile()
 	identifyStoryType(story_files)
 	tweetStory(story_files)
+	clearDir('stories/')
 else:
 	print('No new story update')
-	sys.exit()'''
-
+	sys.exit()
